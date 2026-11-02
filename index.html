@@ -120,6 +120,14 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--pop);outline-of
 .pcatch{position:relative;height:300px;background:linear-gradient(#bfe6ff,#e8f7ff);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .pfruit{position:absolute;border:0;background:none;font-size:34px;cursor:pointer;padding:4px;animation:pfi .15s}
 @keyframes pfi{from{transform:scale(0)}}
+.piano{display:flex;gap:3px;width:100%}.piano button{flex:1;height:150px;background:#fff;border:2px solid #283041;border-radius:0 0 8px 8px;font:800 14px var(--f-d);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;cursor:pointer;color:#283041;touch-action:manipulation}
+.piano button:active{background:#e3e6ec;transform:translateY(2px)}
+.xylo{display:flex;gap:4px;align-items:center;width:100%;justify-content:center}.xylo button{flex:1;max-width:46px;border:0;border-radius:8px;color:#fff;font:800 14px var(--f-d);cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.4);touch-action:manipulation}
+.xylo button:active,.xylo button.lit{filter:brightness(1.35);transform:scale(1.08)}
+.drums{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:300px}.drums button{aspect-ratio:1;border-radius:50%;border:5px solid #283041;color:#fff;font:800 14px var(--f-d);cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.4);touch-action:manipulation}.drums button:active{transform:scale(.94)}
+.strings{display:flex;flex-direction:column;gap:8px;width:100%}.strings button{position:relative;height:40px;border:0;background:#f3e1c4;border-radius:8px;cursor:pointer;font:800 14px var(--f-d);text-align:left;padding-left:12px;color:#283041;touch-action:manipulation}
+.strings button::after{content:"";position:absolute;left:40px;right:10px;top:50%;height:var(--w);margin-top:calc(var(--w) / -2);background:#8a8a8a;border-radius:2px}.strings button:active::after{background:#f28c38}
+.grade{font:800 64px var(--f-d);line-height:1;text-align:center}
 .codebig{font:800 44px var(--f-d);letter-spacing:6px;text-align:center;background:#fff6d6;border:3px dashed var(--pop);border-radius:16px;padding:6px 10px;color:var(--ink)}
 html,body{margin:0}
 </style>
@@ -148,7 +156,7 @@ html,body{margin:0}
     <form class="row" id="netJoinF" autocomplete="off"><input id="netCode" inputmode="numeric" maxlength="6" placeholder="Kód od kamarádky" aria-label="Kód hry"><button class="btn" type="submit">Připojit se</button></form>
     <p class="muted" id="netStatus">Hraješ sám.</p>
     <h2>Kdo je ve městě</h2><div class="online" id="online"></div>
-    <p class="muted">Ve městě je domov, obchody, pekárna, zmrzlinárna, květinářství, pizzerie, herna, park, divadlo a koncerty. Na parkovišti stojí vaše auto, kterým se jezdí do zoo, k moři a do lesa. Tlačítko <b>Můj telefon</b> otevře mobil se zamykacím kódem. V něm se dá nakupovat s dovozem domů, kupovat lístky, objednat jídlo, psát a volat kamarádům, hrát hry, fotit a jezdit taxíkem. Lidem okolo můžeš napsat i zprávu přímo ve hře.</p>
+    <p class="muted">Ve městě je domov, obchody, herna, park, divadlo, koncerty, škola, školka, hudební kroužek s nástroji a práce, kde dospělí vydělávají peníze. Vaše auto stojí na parkovišti. Můžeš s ním jezdit po městě sama (vystoupíš tlačítkem Akce, Přepni troubí) nebo jet do zoo, k moři a do lesa. V telefonu jsou nákupy, lístky, zprávy, hry a žákovská knížka.</p>
     <div class="row"><button class="btn" type="button" id="mapBtn">Mapa města</button><button class="btn w" type="button" id="edit">Upravit rodinku</button></div></section>
 </section>
 </div>
@@ -309,7 +317,7 @@ $('setup').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
 
 /* ================= SVĚTY ================= */
 const TS=32,VW=320,VH=288;
-const SOLID='T#WLKFktYvVROPHEIuwqpheDonSBfjgayQACXli%N^';
+const SOLID='T#WLKFktYvVROPHEIuwqpheDonSBfjgayQACXli%N^123456789~&$';
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 const faceOf=(dx,dy)=>Math.abs(dx)>=Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down');
 function newWorld(id,MW,MH){return {id,MW,MH,G:[...Array(MH)].map(()=>Array(MW).fill('.')),BLD:[],DOORS:[],labels:[],enc:[],animals:[]};}
@@ -324,9 +332,9 @@ const tilesOf=ch=>{const o=[];for(let y=0;y<W.MH;y++)for(let x=0;x<W.MW;x++)if(t
 const near=ch=>{const o=[];for(let y=0;y<W.MH;y++)for(let x=0;x<W.MW;x++)if(tl(x,y)===ch)for(const d of Object.values(DIRS)){const nx=x+d[0],ny=y+d[1],t=tl(nx,ny);if(!SOLID.includes(t)&&!'zZ'.includes(t))o.push({x:nx,y:ny,fx:x,fy:y});}return o;};
 
 /* ---------- město ---------- */
-function buildCity(){const w=newWorld('mesto',59,32);wborder(w);
-  [9,12,20,23].forEach(y=>wfill(w,0,y,w.MW-1,y,'='));[13,16,28,31,43,46].forEach(x=>wfill(w,x,0,x,w.MH-1,'='));
-  wfill(w,0,10,w.MW-1,11,'r');wfill(w,0,21,w.MW-1,22,'r');[14,29,44].forEach(x=>wfill(w,x,0,x+1,w.MH-1,'r'));
+function buildCity(){const w=newWorld('mesto',59,43);wborder(w);
+  [9,12,20,23,31,34].forEach(y=>wfill(w,0,y,w.MW-1,y,'='));[13,16,28,31,43,46].forEach(x=>wfill(w,x,0,x,w.MH-1,'='));
+  wfill(w,0,10,w.MW-1,11,'r');wfill(w,0,21,w.MW-1,22,'r');wfill(w,0,32,w.MW-1,33,'r');[14,29,44].forEach(x=>wfill(w,x,0,x+1,w.MH-1,'r'));
   wbld(w,2,1,11,8,6,8,'wood','DOMOV','#e8475f');
   wbld(w,17,2,21,8,19,8,'pink','OBLEČENÍ','#ef7fb6');
   wbld(w,23,2,27,8,25,8,'white','POTRAVINY','#4cb36b');
@@ -354,13 +362,18 @@ function buildCity(){const w=newWorld('mesto',59,32);wborder(w);
   // koncert
   F(49,13,55,14,'j');S(48,18,'a');S(47,13,'T');S(57,13,'T');S(57,19,'T');S(47,19,'T');w.labels.push(['KONCERTY',52,19.2,'#e8475f']);
   // parkoviště
-  F(47,24,57,30,'-');S(51,27,'C');S(52,27,'C');w.labels.push(['PARKOVIŠTĚ',52,24.2,'#3a8fd9']);
+  F(47,24,57,30,'-');F(50,23,51,23,'-');F(46,26,46,27,'-');w.labels.push(['PARKOVIŠTĚ',52,24.2,'#3a8fd9']);
+  // škola, školka, kroužek, práce
+  wbld(w,2,35,11,41,6,35,'white','ŠKOLA','#3a8fd9');[[3,38],[4,38],[8,38],[9,38]].forEach(([x,y])=>S(x,y,'6'));F(4,40,9,40,'7');S(3,40,'8');S(10,40,'w');
+  wbld(w,17,35,27,41,22,35,'mat','ŠKOLKA','#ef7fb6');S(19,38,'9');S(20,38,'9');[[25,38],[26,38],[25,40],[26,40]].forEach(([x,y])=>S(x,y,'~'));S(19,40,'&');S(20,40,'&');S(23,40,'Y');
+  wbld(w,32,35,42,41,37,35,'warm','HUDEBNÍ KROUŽEK','#7a5cd6');S(33,37,'1');S(34,37,'1');S(41,37,'2');S(33,40,'3');S(37,40,'4');S(41,40,'5');
+  wbld(w,47,35,57,41,52,35,'blue','PRÁCE','#2f3440');[[48,38],[49,38],[55,38],[56,38],[48,40],[49,40],[55,40],[56,40]].forEach(([x,y])=>S(x,y,'$'));
   w.cars=1;w.fountain={x:36,y:26};w.swing={x:8,y:14};w.ducks={x0:2,y0:14,x1:6,y1:17};
   w.sleep=[[3,3],[4,3],[5,2],[5,3],[6,2],[6,3],[7,3],[5,4]];w.spawn=[[50,26],[53,26],[50,28],[53,28],[49,27],[54,27],[51,29],[52,29]];
   w.post=g=>{const P=(x,y,a,b,c)=>{g.fillStyle=c;g.fillRect(x,y,a,b);};
     const zebH=(x,y0)=>{for(let i=0;i<5;i++)P(x*TS+2,y0*TS+2+i*12.5,28,6,'#f2f2f2');};const zebV=(x0,y)=>{for(let i=0;i<5;i++)P(x0*TS+2+i*12.5,y*TS+2,6,28,'#f2f2f2');};
-    [6,22,36,52].forEach(x=>{zebH(x,10);zebH(x,21);});[5,17,27].forEach(y=>{zebV(14,y);zebV(29,y);zebV(44,y);});
-    const vr=[14,29,44],hr=[10,21];
+    [6,22,36,52].forEach(x=>{zebH(x,10);zebH(x,21);zebH(x,32);});[5,17,27,38].forEach(y=>{zebV(14,y);zebV(29,y);zebV(44,y);});
+    const vr=[14,29,44],hr=[10,21,32];
     for(let x=0;x<w.MW*TS;x+=24){hr.forEach(y=>{const cx=Math.floor(x/TS);if(!vr.some(v=>cx>=v&&cx<=v+1))P(x,(y+1)*TS-1,12,2,'#e8e2c8');});}
     for(let y=0;y<w.MH*TS;y+=24){vr.forEach(x=>{const cy=Math.floor(y/TS);if(!hr.some(h=>cy>=h&&cy<=h+1))P((x+1)*TS-1,y,2,12,'#e8e2c8');});}
     const fx=36*TS,fy=26*TS;g.fillStyle='#9aa3ad';g.beginPath();g.arc(fx+32,fy+32,30,0,7);g.fill();g.fillStyle='#4fa9e0';g.beginPath();g.arc(fx+32,fy+32,26,0,7);g.fill();g.fillStyle='#9aa3ad';g.beginPath();g.arc(fx+32,fy+32,8,0,7);g.fill();
@@ -478,6 +491,17 @@ function paintWorld(w){const cv=document.createElement('canvas');cv.width=w.MW*T
     if(t==='N'){P(X,Y+4,TS,24,'#e8475f');for(let i=0;i<4;i++)for(let j=0;j<3;j++)if((i+j)%2)P(X+i*8,Y+4+j*8,8,8,'#fff');if(x%2===0)P(X+14,Y+8,14,10,'#c98a3c');}
     if(t==='^'){P(X+6,Y+4,20,26,'#8a5a35');P(X+4,Y+2,24,5,'#6e4527');for(let i=0;i<3;i++)P(X+8,Y+10+i*7,16,2,'#6e4527');}
     if(t==='m'){P(X+14,Y+16,5,8,'#f3e6cf');g.fillStyle='#d9472f';g.beginPath();g.arc(X+16.5,Y+17,8,Math.PI,0);g.fill();circ(X+13,Y+13,1.5,'#fff');circ(X+19,Y+12,1.5,'#fff');}
+    if(t==='1'){P(X+1,Y+6,30,22,'#20242c');for(let i=0;i<7;i++)P(X+3+i*4,Y+15,3.4,11,'#fff');for(let i=0;i<6;i++)if(i!==2)P(X+5.5+i*4,Y+15,2,6,'#20242c');}
+    if(t==='2'){circ(X+16,Y+19,11,'#e8475f');circ(X+16,Y+19,8,'#f3f3f3');circ(X+5,Y+8,5,'#f6c945');circ(X+27,Y+8,5,'#f6c945');P(X+15,Y+3,2,8,'#8a8a8a');}
+    if(t==='3'||t==='5'){const c=t==='3'?'#c98a3c':'#8a4a22';circ(X+12,Y+21,t==='3'?8:6,c);circ(X+17,Y+15,t==='3'?6:5,c);circ(X+14,Y+18,2.5,'#3d2a1a');g.strokeStyle='#5a3825';g.lineWidth=3;g.beginPath();g.moveTo(X+17,Y+15);g.lineTo(X+29,Y+3);g.stroke();if(t==='5'){g.strokeStyle='#d9c7a8';g.lineWidth=1.5;g.beginPath();g.moveTo(X+4,Y+6);g.lineTo(X+28,Y+28);g.stroke();}}
+    if(t==='4'){P(X+3,Y+10,26,16,'#8a5a35');['#e8475f','#f28c38','#f6c945','#4cb36b','#3a8fd9','#7a5cd6'].forEach((c,i)=>P(X+5+i*4,Y+8+i,3,18-2*i,c));}
+    if(t==='6'){P(X+2,Y+8,28,16,'#c98a3c');P(X+2,Y+8,28,3,'#e0a96b');P(X+6,Y+12,9,7,'#fff');P(X+10,Y+12,1,7,'#bfc6d0');P(X+19,Y+13,8,2,'#e8475f');P(X+4,Y+24,3,6,'#6e4527');P(X+25,Y+24,3,6,'#6e4527');}
+    if(t==='7'){P(X,Y+4,TS,22,'#2f5a3a');P(X,Y+4,TS,2,'#8a5a35');P(X,Y+24,TS,3,'#8a5a35');P(X+4+((x*5)%10),Y+10,10,1.5,'#fff');P(X+6,Y+16,14,1.5,'#fff');P(X+((x*7)%16)+4,Y+20,6,1.5,'#f6c945');}
+    if(t==='8'){P(X+1,Y+6,30,22,'#8a5a35');P(X+1,Y+6,30,4,'#a8743f');circ(X+24,Y+12,3,'#e8475f');P(X+6,Y+12,8,5,'#fff');}
+    if(t==='9'){P(X+4,Y+19,8,8,'#e8475f');P(X+12,Y+19,8,8,'#3a8fd9');P(X+20,Y+19,8,8,'#f6c945');P(X+8,Y+11,8,8,'#4cb36b');P(X+16,Y+11,8,8,'#7a5cd6');P(X+12,Y+3,8,8,'#f28c38');}
+    if(t==='~'){P(X+2,Y+6,28,22,'#7fc8f0');P(X+4,Y+8,10,6,'#fff');P(X+2,Y+15,28,13,'#ef7fb6');P(X+2,Y+15,28,2,'#d35f98');}
+    if(t==='&'){P(X+3,Y+8,26,17,'#f6c945');P(X+7,Y+11,12,10,'#fff');P(X+9,Y+13,4,3,'#3a8fd9');P(X+21,Y+11,2,8,'#e8475f');P(X+24,Y+11,2,8,'#4cb36b');P(X+5,Y+25,3,5,'#c98a3c');P(X+24,Y+25,3,5,'#c98a3c');}
+    if(t==='$'){P(X+1,Y+13,30,15,'#b98352');P(X+1,Y+13,30,3,'#d9a96e');P(X+8,Y+2,16,12,'#20242c');P(X+10,Y+4,12,8,'#4b7fbf');P(X+12,Y+6,6,1,'#cfeeff');P(X+12,Y+8,8,1,'#cfeeff');P(X+15,Y+14,2,2,'#20242c');P(X+9,Y+19,14,3,'#e4e7ec');}
   }
   g.fillStyle='rgba(0,0,0,.16)';w.BLD.forEach(b=>{g.fillRect((b.x1+1)*TS,(b.y0)*TS+8,7,(b.y1-b.y0+1)*TS);g.fillRect(b.x0*TS+8,(b.y1+1)*TS,(b.x1-b.x0+1)*TS,5);});
   w.enc.forEach(e=>{});
@@ -499,13 +523,13 @@ W=WORLDS.mesto;
 
 /* ---------- auta ---------- */
 const CAR_C=['#e8475f','#3a8fd9','#f6c945','#ffffff','#4cb36b','#2f3440','#f28c38','#8d6be0','#c4472f','#9aa0a8'];
-const LANES=[{h:1,k:10,dir:-1},{h:1,k:11,dir:1},{h:1,k:21,dir:-1},{h:1,k:22,dir:1},{h:0,k:14,dir:1},{h:0,k:15,dir:-1},{h:0,k:29,dir:1},{h:0,k:30,dir:-1},{h:0,k:44,dir:1},{h:0,k:45,dir:-1}];
+const LANES=[{h:1,k:10,dir:-1},{h:1,k:11,dir:1},{h:1,k:21,dir:-1},{h:1,k:22,dir:1},{h:1,k:32,dir:-1},{h:1,k:33,dir:1},{h:0,k:14,dir:1},{h:0,k:15,dir:-1},{h:0,k:29,dir:1},{h:0,k:30,dir:-1},{h:0,k:44,dir:1},{h:0,k:45,dir:-1}];
 let cars=[];
 function initCars(){cars=LANES.map((L,i)=>({L,p:Math.random()*(L.h?WORLDS.mesto.MW:WORLDS.mesto.MH)*TS,c:CAR_C[i%CAR_C.length],stop:0}));}
 function carRect(c){const L=c.L;return L.h?{x:c.p-16,y:L.k*TS+7,w:32,h:18}:{x:L.k*TS+7,y:c.p-16,w:18,h:32};}
 function carAt(x,y){if(!W.cars)return false;return cars.some(c=>{const r=carRect(c);return r.x<x*TS+TS&&r.x+r.w>x*TS&&r.y<y*TS+TS&&r.y+r.h>y*TS;});}
 function stepCars(dt){if(!W.cars)return;
-  const people=[];ents.forEach(e=>{const [x,y]=pos(e);people.push([x+16,y+16]);});remote.forEach(r=>{if(r.w===W.id)r.m.forEach(m=>people.push([m.px+16,m.py+16]));});
+  const people=[];ents.forEach(e=>{if(e.inCar)return;const [x,y]=pos(e);people.push([x+16,y+16]);});if(driving){const [x,y]=carXY();people.push([x+16,y+16]);}remote.forEach(r=>{if(r.w===W.id)r.m.forEach(m=>people.push([m.px+16,m.py+16]));});
   cars.forEach(c=>{const L=c.L,ahead=c.p+L.dir*30;let blocked=false;
     for(const [px,py] of people){const along=L.h?px:py,across=L.h?py:px;if(Math.abs(across-(L.k*TS+16))<18&&(along-c.p)*L.dir>0&&(along-c.p)*L.dir<46){blocked=true;break;}}
     if(!blocked)for(const o of cars){if(o===c)continue;const r=carRect(o),ax=L.h?ahead:L.k*TS+16,ay=L.h?L.k*TS+16:ahead;
@@ -534,13 +558,14 @@ function useWorld(id,spots){W=WORLDS[id];castles=new Set();feast=null;cook=null;
   buddies.forEach(e=>{const f=freeSpot(spots[0][0],spots[0][1]);if(f){e.x=f.x;e.y=f.y;}e.mv=null;e.goal=null;});
   anims=W.animals.map(a=>({...a}));mkDucks();
   act=Math.min(act,famEnts.length-1);_mapURL=null;renderWho();}
-function freeSpot(cx,cy){for(let r=1;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=cx+dx,y=cy+dy;if(!solid(x,y)&&!occ(x,y,null)&&tl(x,y)!=='r'&&!isDoor(x,y))return {x,y};}return null;}
+function freeSpot(cx,cy){for(let r=1;r<6;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=cx+dx,y=cy+dy;if(!solid(x,y)&&!occ(x,y,null)&&tl(x,y)!=='r'&&!isDoor(x,y)&&!famCarAt(x,y))return {x,y};}return null;}
 function startWorld(){
   $('setup').hidden=true;$('game').hidden=false;
   famEnts=FAM.members.map(m=>mk(m,0,0));
   cityExtras=[];
   [['holka','Ema',8,15],['kluk','Tom',10,16],['holka','Bára',7,17],['kluk','Kuba',19,15],['holka','Lili',25,15],['kluk','Max',22,16],['holka','Sofie',50,16],['kluk','Adam',54,17],['holka','Nela',35,27],['kluk','Vojta',39,28]].forEach(([r,n,x,y])=>cityExtras.push(mk({r,name:n,look:look(r)},x,y,{friend:1})));
   [['mama','Paní Nová',25,9],['deda','Děda Franta',36,27],['tata','Pan Malý',19,20],['babi','Babička Jana',34,25],['tata','Pan pekař',40,6],['mama','Paní Krátká',52,7],['tata','Pan Dlouhý',50,17]].forEach(([r,n,x,y])=>cityExtras.push(mk({r,name:n,look:look(r)},x,y,{town:1})));
+  [['mama','Paní učitelka',6,39,'skola',['Kdo chce do školy?','Dnes počítáme!']],['babi','Paní učitelka Věra',22,38,'skolka',['Děti, pojďte si hrát!','Kdo si zazpívá?']],['tata','Pan učitel hudby',37,38,'hudba',['Zahrajeme si?','Hudba je radost!']],['tata','Pan šéf',52,39,'prace',['Kdo dnes pracuje?','Počítače čekají.']]].forEach(([r,n,x,y,t,l])=>cityExtras.push(mk({r,name:n,look:look(r)},x,y,{town:1,post:1,teach:t,lines:l})));
   initCars();useWorld('mesto',[[6,5],[5,3],[7,3],[3,3],[9,4],[7,6],[5,6],[9,6]]);
   updPill();say(ents[0],'Jdeme ven!');
   if(!running){running=true;last=0;requestAnimationFrame(loop);}
@@ -552,7 +577,24 @@ function setAct(i){if(i===act||!ents[i]||!isFam(ents[i]))return;act=i;ents[i].go
 function say(e,t,d,dur){e.say={text:t,t:dur||2.4,d:d||0};}
 function occ(x,y,self){return ents.some(o=>o!==self&&o.x===x&&o.y===y);}
 const solid=(x,y)=>SOLID.includes(tl(x,y));
-const can=(x,y,s)=>!solid(x,y)&&!occ(x,y,s)&&!carAt(x,y);
+let famCar={x:51,y:27,face:'right'},driving=null;
+const famCarAt=(x,y)=>W.id==='mesto'&&!driving&&famCar.x===x&&famCar.y===y;
+const can=(x,y,s)=>!solid(x,y)&&!occ(x,y,s)&&!carAt(x,y)&&!famCarAt(x,y);
+function carXY(){if(!driving)return [famCar.x*TS,famCar.y*TS];let x=driving.x*TS,y=driving.y*TS;if(driving.mv){const k=driving.mv.t;x=(driving.mv.fx+(driving.x-driving.mv.fx)*k)*TS;y=(driving.mv.fy+(driving.y-driving.mv.fy)*k)*TS;}return [x,y];}
+function startDrive(){closeOv();const riders=fam().concat(ents.filter(e=>e.buddyT>0));riders.forEach(e=>{e.inCar=1;e.x=-10;e.y=-10;e.mv=null;e.goal=null;e.eating=false;e.watch=0;e.ride=null;e.busy=0;e.say=null;});
+  driving={x:famCar.x,y:famCar.y,face:famCar.face,mv:null,riders,say:{text:'Brrrm! Jedeme!',t:2}};}
+function exitCar(){const d=driving;if(d.mv)return;let ok=false;for(let r=1;r<=2&&!ok;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=d.x+dx,y=d.y+dy;if(!solid(x,y)&&tl(x,y)!=='r'&&!isDoor(x,y))ok=true;}
+  if(!ok){d.say={text:'Tady se vystoupit nedá. Zajeď ke chodníku.',t:2.5};return;}
+  famCar={x:d.x,y:d.y,face:d.face};driving=null;d.riders.forEach(e=>{e.inCar=0;const f=freeSpot(famCar.x,famCar.y);if(f){e.x=f.x;e.y=f.y;}e.mv=null;e.goal=null;});say(ents[act],'Zaparkováno, vystupujeme!');}
+function driveStep(dt){const d=driving;if(!d)return;if(d.say){d.say.t-=dt;if(d.say.t<=0)d.say=null;}
+  if(d.mv){d.mv.t+=dt*7;if(d.mv.t>=1)d.mv=null;}
+  if(!d.mv&&held&&$('ov').hidden&&!travel&&$('phone').hidden){const [dx,dy]=DIRS[held];d.face=held;const nx=d.x+dx,ny=d.y+dy,t=tl(nx,ny);if((t==='r'||t==='-')&&!carAt(nx,ny)&&!occ(nx,ny,null)){d.mv={fx:d.x,fy:d.y,t:0};d.x=nx;d.y=ny;}}}
+function drawFamCar(){const [x,y]=carXY();const f=driving?driving.face:famCar.face;const h=f==='left'||f==='right';const r=h?{x:x,y:y+6,w:32,h:20}:{x:x+6,y:y,w:20,h:32};
+  ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(r.x+2,r.y+3,r.w,r.h);ctx.fillStyle='#20242c';if(h){[[4,-1],[22,-1],[4,r.h-2],[22,r.h-2]].forEach(([a,b])=>ctx.fillRect(r.x+a,r.y+b,6,3));}else{[[-1,4],[r.w-2,4],[-1,22],[r.w-2,22]].forEach(([a,b])=>ctx.fillRect(r.x+a,r.y+b,3,6));}
+  ctx.fillStyle='#7a5cd6';rr(r.x,r.y,r.w,r.h,6);ctx.fill();ctx.fillStyle='#6448b8';if(h)ctx.fillRect(r.x+9,r.y+3,14,r.h-6);else ctx.fillRect(r.x+3,r.y+9,r.w-6,14);
+  ctx.fillStyle='#bfe3f7';const fw=f==='right'||f==='down';if(h)ctx.fillRect(fw?r.x+22:r.x+6,r.y+3,4,r.h-6);else ctx.fillRect(r.x+3,fw?r.y+22:r.y+6,r.w-6,4);
+  ctx.fillStyle='#fff6b0';if(h){const fx=fw?r.x+r.w-2:r.x;ctx.fillRect(fx,r.y+2,2,3);ctx.fillRect(fx,r.y+r.h-5,2,3);}else{const fy=fw?r.y+r.h-2:r.y;ctx.fillRect(r.x+2,fy,3,2);ctx.fillRect(r.x+r.w-5,fy,3,2);}
+  if(driving&&driving.riders.length){ctx.font='8px '+EMO;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(driving.riders.length>1?'👪':'🙂',r.x+r.w/2,r.y+r.h/2);ctx.textAlign='left';}}
 function tryMove(e,dx,dy){e.face=faceOf(dx,dy);const nx=e.x+dx,ny=e.y+dy;if(!can(nx,ny,e))return false;e.eating=false;e.mv={fx:e.x,fy:e.y,t:0};e.x=nx;e.y=ny;return true;}
 function bfs(e,targets){const MW=W.MW,K=(x,y)=>y*MW+x,s=K(e.x,e.y),T=new Map();targets.forEach(t=>{if(!occ(t.x,t.y,e))T.set(K(t.x,t.y),t);});if(!T.size)return null;if(T.has(s))return {arrived:T.get(s)};
   const prev=new Map([[s,-1]]),q=[[e.x,e.y]];let h=0;while(h<q.length){const [x,y]=q[h++];for(const d of Object.values(DIRS)){const nx=x+d[0],ny=y+d[1],k=K(nx,ny);if(prev.has(k)||solid(nx,ny)||tl(nx,ny)==='Z')continue;prev.set(k,K(x,y));
@@ -608,7 +650,7 @@ function openFlw(){overlay(`<p>Květinářství</p>${wallet()}<div class="og">${
 let pizzaAt=null;
 function openPizza(fx,fy){pizzaAt={x:fx,y:fy};overlay(`<p>Co si dáme? Platí se jednou za celou rodinu.</p>${wallet()}<div class="og">${MENU.map((s,i)=>`<button type="button" data-menu="${i}" ${s[2]>FAM.money?'disabled':''}><b>${s[0]}</b>${s[1]}<span class="pr">${s[2]} Kč</span></button>`).join('')}</div>${X('Zpět')}`);}
 function openTrips(){if(W.id!=='mesto'){overlay(`<p>Jedeme domů?</p><div class="og"><button type="button" data-trip="mesto"><b>🏠</b>Domů do města</button></div>${X('Ještě ne')}`);return;}
-  overlay(`<p>Kam pojedeme autem?</p>${wallet()}<div class="og">${TRIPS.map(t=>`<button type="button" data-trip="${t[0]}" ${t[3]>FAM.money&&!(FAM.tickets[t[0]]>0)?'disabled':''}><b>${t[1]}</b>${t[2]}<span class="pr">${FAM.tickets[t[0]]>0?'lístek ✓':t[3]?t[3]+' Kč':'zdarma'}</span><span style="font-size:11px">${t[4]}</span></button>`).join('')}</div><p style="font-size:14px">Kamarádi, kteří jdou zrovna s tebou, pojedou taky.</p>${X('Zůstaneme')}`);}
+  overlay(`<p>Kam pojedeme autem?</p>${wallet()}<div class="og"><button type="button" data-drive="1"><b>🚗</b>Řídit po městě<span style="font-size:11px">Jezdíš sama, kam chceš</span></button>${TRIPS.map(t=>`<button type="button" data-trip="${t[0]}" ${t[3]>FAM.money&&!(FAM.tickets[t[0]]>0)?'disabled':''}><b>${t[1]}</b>${t[2]}<span class="pr">${FAM.tickets[t[0]]>0?'lístek ✓':t[3]?t[3]+' Kč':'zdarma'}</span><span style="font-size:11px">${t[4]}</span></button>`).join('')}</div><p style="font-size:14px">Kamarádi, kteří jdou zrovna s tebou, pojedou taky.</p>${X('Zůstaneme')}`);}
 function openTheatre(){if(show)return say(ents[act],'Představení už běží!');overlay(`<p>Divadlo</p>${wallet()}<p style="font-size:15px">${FAM.tickets.divadlo>0?'Máš lístek z telefonu ✓':'Lístky pro celou rodinu stojí 10 Kč.'}</p><div class="og">${SHOWS.map((s,i)=>`<button type="button" data-show="${i}" ${FAM.money<10&&!(FAM.tickets.divadlo>0)?'disabled':''}><b>🎭</b>${s}</button>`).join('')}</div>${X('Zpět')}`);}
 function openConcert(){if(show)return say(ents[act],'Koncert už hraje!');overlay(`<p>Koncert</p>${wallet()}<p style="font-size:15px">${FAM.tickets.koncert>0?'Máš lístek z telefonu ✓':'Lístky pro celou rodinu stojí 8 Kč.'}</p><div class="og"><button type="button" data-conc="1" ${FAM.money<8&&!(FAM.tickets.koncert>0)?'disabled':''}><b>🎸</b>Rocková kapela</button><button type="button" data-conc="2" ${FAM.money<8&&!(FAM.tickets.koncert>0)?'disabled':''}><b>🎻</b>Pohádkové písničky</button></div>${X('Zpět')}`);}
 function openMap(){const sc=Math.min(1,($('ov').clientWidth-24)/W.cv.width);
@@ -634,8 +676,12 @@ function animNear(fx,fy){let best=null,bd=1e9;anims.forEach(a=>{const d=Math.hyp
 function act1(e){
   if(e.busy>0)return;const d=DIRS[e.face],fx=e.x+d[0],fy=e.y+d[1],t=tl(fx,fy),isA=e===ents[act];
   const o=ents.find(o=>o!==e&&o.x===fx&&o.y===fy);
+  if(isA&&famCarAt(fx,fy))return openTrips();
   if(o&&e.toy&&e.flower){o.toy=e.toy;o.toyT=40;o.flower=true;e.toy=null;e.flower=false;o.face=faceOf(e.x-o.x,e.y-o.y);say(e,'To je pro tebe!');say(o,'Jé, děkuju!',.8);addP(...headOf(o),'heart',4);return;}
   if(o&&o.friend&&isA){o.face=faceOf(e.x-o.x,e.y-o.y);const c=rnd([['Půjdeš si se mnou hrát?','Jo! Jdu s tebou!'],['Jsi moje kamarádka!','Ty moje taky!'],['Pojď do herny!','Hurá, jdu!'],['Pojď k nám domů!','Jo, jdu!'],['Pojedeš s námi na výlet?','Jééé, jasně!']]);say(e,c[0]);say(o,c[1],.8);o.buddyT=90;o.goal=null;o.busy=0;addP(...headOf(o),'heart',2);return;}
+  if(o&&o.teach&&isA){o.face=faceOf(e.x-o.x,e.y-o.y);if(o.teach==='skola'){say(o,'Dobrý den! Sedni si do lavice.');return openSchool();}if(o.teach==='hudba'){say(o,'Zahrajeme si spolu!');return openMusicLesson();}
+    if(o.teach==='skolka'){say(o,'Děti, zazpíváme si!');ents.forEach((k,i)=>{if((k.friend||isFam(k))&&dist(k,o)<6){k.jump=.5;say(k,'♪ La la la ♪',.5+i*.1);addP(...headOf(k),'note',2);}});return;}
+    if(o.teach==='prace'){say(o,'Dobrý den! Práce je u počítače.');return;}}
   if(o&&o.town){o.face=faceOf(e.x-o.x,e.y-o.y);say(e,rnd(['Dobrý den!','Ahoj!']));say(o,rnd(TOWN_HI),.8);o.busy=2;o.goal=null;return;}
   if(o){o.face=faceOf(e.x-o.x,e.y-o.y);const c=rnd([['Mám tě rád!','Já tebe taky!','heart'],['Zahrajeme si?','Jasně!'],['Pojď se mnou!','Jdu!'],['Máš hlad?','Trochu jo!'],['Obejmout!','Mmm!','heart']]);
     if(e.carry){o.carry=e.carry;e.carry=null;say(e,'To je pro tebe!');say(o,'Děkuju!',.8);addP(...headOf(o),'heart',3);}
@@ -646,7 +692,20 @@ function act1(e){
     if(t==='f'){e.carry=rnd(['#ef7fb6','#f6c945','#e8475f','#8d6be0']);return say(e,'Kytička!');}
     if(t==='y'||t==='Q'){e.ride={k:t,x:fx,y:fy,t:4};e.busy=4;return say(e,t==='y'?'Hyjé, koníku!':'Točíme se!');}
     if(t==='A'){e.busy=2;return say(e,'Maluju obrázek!');}
+    if('1234569~&'.includes(t)){e.busy=3;if(t==='~')addP(fx*TS+16,fy*TS,'z',3);else if('12345'.includes(t))addP(fx*TS+16,fy*TS,'note',3);return say(e,{1:'Hraju na klavír!',2:'Bum bum bum!',3:'Brnkám na kytaru!',4:'Cink cink!',5:'Hraju na housle!',6:'Učím se psát!',9:'Stavím věž!','~':'Spinkám…','&':'Kreslím!'}[t]);}
     return say(e,rnd(['Hm hm','To je hezké!','Jupí!']));}
+  if(t==='6')return openSchool();
+  if(t==='7')return say(e,'Na tabuli píšu: A B C D!');
+  if(t==='8')return say(e,'Tady sedí paní učitelka.');
+  if(t==='1')return openInstr('piano');
+  if(t==='2')return openInstr('drums');
+  if(t==='3')return openInstr('guitar');
+  if(t==='4')return openInstr('xylo');
+  if(t==='5')return openInstr('violin');
+  if(t==='9'){e.busy=2;addP(fx*TS+16,fy*TS,'star',3);return say(e,'Stavím nejvyšší věž!');}
+  if(t==='~'){e.busy=4;addP(fx*TS+16,fy*TS,'z',3);return say(e,'Odpolední spinkání… Zzz');}
+  if(t==='&'){e.busy=2;addP(fx*TS+16,fy*TS,'star',2);return say(e,rnd(['Kreslím sluníčko!','Kreslím maminku!','Kreslím pejska!']));}
+  if(t==='$')return openWork();
   if(t==='L')return W.sleep?sleep():null;
   if(t==='K'){if(cook)return say(e,'Už se to vaří!');if(feast)return say(e,'Nejdřív to sníme!');return openCook();}
   if(t==='t'||t==='q'||t==='N'){if(feast){e.eating=true;return say(e,'Mňam!');}if(t==='q')return openPizza(fx,fy);
@@ -744,6 +803,7 @@ function friendDecide(e,L){
   if(r<.66){e.goal={targets:near('y').concat(near('Q')),then:e=>act1(e)};return;}
   if(r<.72&&!swingBy){e.goal={targets:near('S'),then:e=>act1(e)};return;}
   if(r<.78){e.goal={targets:near('B'),then:e=>act1(e)};return;}
+  if(r<.84){const T=rnd([near('6'),near('9'),near('1'),near('~'),near('&'),near('4')]);if(T.length){e.goal={targets:T,then:e=>act1(e)};return;}}
   if(r<.88){const o=rnd(ents.filter(x=>x.friend&&x!==e));if(o){e.goal={targets:adj(o),then:e=>{if(dist(o,e)===1){e.face=faceOf(o.x-e.x,o.y-e.y);say(e,rnd(['Hraješ si se mnou?','Honička!','Pojď na skluzavku!','Půjdeme na koncert?']));say(o,rnd(['Jo!','Jasně!','Hurá!']),.8);}}};return;}}
   const d=rnd(Object.values(DIRS)),nx=e.x+d[0],ny=e.y+d[1];if(!isDoor(nx,ny)&&tl(nx,ny)!=='r')tryMove(e,d[0],d[1]);
 }
@@ -755,6 +815,7 @@ function decide(e){const L=ents[act];
   if(e.stayT>0)return;
   if(isDoor(e.x,e.y)||tl(e.x,e.y)==='r'){e.goal={targets:offDoor(e)};return;}
   if(e.friend)return friendDecide(e,L);
+  if(e.post){if(Math.random()<.12)say(e,rnd(e.lines||['Dobrý den!']));return;}
   if(e.town)return townDecide(e,L);
   if(e.carry&&Math.random()<.5){const o=rnd(fam().filter(x=>x!==e));if(o){e.goal={targets:adj(o),then:e=>act1(e)};return;}}
   const dl=dist(L,e);
@@ -764,6 +825,7 @@ function decide(e){const L=ents[act];
   else if(r<.45){e.jump=.5;say(e,rnd(['La la','Jupí!','Hm hm','Hezký den!']));}
 }
 function upd(e,dt,isA){
+  if(e.inCar)return;
   if(e.say){if(e.say.d>0)e.say.d-=dt;else{e.say.t-=dt;if(e.say.t<=0)e.say=null;}}
   if(e.jump>0)e.jump-=dt;
   if(e.stayT>0)e.stayT-=dt;
@@ -792,10 +854,11 @@ function stepShow(dt){if(!show)return;show.t+=dt;const i=Math.floor((show.t-3)/(
   if(show.t>=show.len){show=null;ents.forEach(e=>{e.watch=0;});}}
 function step(dt){
   if(travel){travel.t+=dt;if(!travel.done&&travel.t>travel.len/2&&travel.taxi){travel.done=true;const [nm,tx,ty]=travel.taxi;fam().concat(ents.filter(e=>e.buddyT>0)).forEach(e=>{e.x=-5;e.y=-5;});fam().concat(ents.filter(e=>e.buddyT>0)).forEach(e=>{const f=freeSpot(tx,ty);if(f){e.x=f.x;e.y=f.y;}e.mv=null;e.goal=null;e.eating=false;e.watch=0;e.ride=null;e.busy=0;});say(ents[act],'Jsme tady: '+nm+'!');}
-    if(!travel.done&&travel.t>travel.len/2){travel.done=true;const to=travel.to;useWorld(to,WORLDS[to].spawn);
+    if(!travel.done&&travel.t>travel.len/2){travel.done=true;const to=travel.to;if(to==='mesto')famCar={x:51,y:27,face:'right'};useWorld(to,WORLDS[to].spawn);
       say(ents[act],to==='mesto'?'Jsme doma!':to==='zoo'?'Jsme v zoo!':to==='more'?'Moře! Jdeme se koupat!':'Jsme v lese!');}
     if(travel.t>=travel.len)travel=null;}
   ents.forEach((e,i)=>upd(e,dt,i===act));
+  driveStep(dt);
   stepCars(dt);stepShow(dt);
   if(cook){cook.t+=dt;if(Math.random()<dt*6)parts.push({x:8*TS+16+Math.random()*8-4,y:2*TS+2,vx:Math.random()*6-3,vy:-16,t:1.1,max:1.1,k:'steam',d:0});
     if(cook.t>=3){const c=cook;cook=null;startFeast(c.d,W.HOME_SEATS,8,5);}}
@@ -846,7 +909,7 @@ function draw(){
     for(let i=0;i<8;i++){const x=((i*60-tt*260)%(VW+60)+VW+60)%(VW+60)-30;ctx.fillStyle='#e8e2c8';ctx.fillRect(x,149,24,3);ctx.fillStyle='#3d8f45';ctx.beginPath();ctx.arc(((i*47-tt*120)%(VW+40)+VW+40)%(VW+40)-20,90+(i%3)*8,14,0,7);ctx.fill();ctx.beginPath();ctx.arc(((i*53+30-tt*120)%(VW+40)+VW+40)%(VW+40)-20,215+(i%2)*10,14,0,7);ctx.fill();}
     const bx=130,by=134+Math.sin(tt*20)*1;ctx.fillStyle='#7a5cd6';rr(bx,by,64,26,7);ctx.fill();ctx.fillStyle='#bfe3f7';ctx.fillRect(bx+44,by+4,8,18);ctx.fillStyle='#20242c';[[bx+8,by-2],[bx+46,by-2],[bx+8,by+24],[bx+46,by+24]].forEach(([a,b])=>ctx.fillRect(a,b,8,4));
     ctx.fillStyle='#283041';ctx.font='900 16px Nunito, sans-serif';ctx.textAlign='center';ctx.fillText(travel.name,VW/2,60);ctx.textAlign='left';return;}
-  const [ax,ay]=pos(ents[act]);camX=Math.round(clamp(ax+16-VW/2,0,W.MW*TS-VW));camY=Math.round(clamp(ay+16-VH/2,0,W.MH*TS-VH));
+  const [ax,ay]=driving?carXY():pos(ents[act]);camX=Math.round(clamp(ax+16-VW/2,0,W.MW*TS-VW));camY=Math.round(clamp(ay+16-VH/2,0,W.MH*TS-VH));
   ctx.drawImage(W.cv,camX,camY,VW,VH,0,0,VW,VH);ctx.save();ctx.translate(-camX,-camY);
   ducks.forEach(d=>{const f=d.vx<0?-1:1;R(d.x-6,d.y,12,6,'#fff');R(d.x+f*4-2,d.y-5,5,5,'#fff');R(d.x+f*7-(f<0?2:0),d.y-3,3,2,'#f28c38');});
   if(W.fountain){const fx=W.fountain.x*TS+32,fy=W.fountain.y*TS+30;for(let i=0;i<6;i++){const a=tt*2+i;ctx.fillStyle='rgba(207,238,255,.8)';ctx.beginPath();ctx.arc(fx+Math.cos(a)*10,fy-6+Math.abs(Math.sin(a*1.3))*-8,2,0,7);ctx.fill();}}
@@ -857,7 +920,8 @@ function draw(){
   if(W.id==='mesto'){const op=show&&show.kind==='divadlo'?Math.min(1,show.t/2)*(show.t>show.len-1.5?Math.max(0,(show.len-show.t)/1.5):1):0;const cw=(9*TS/2)*(1-op);
     R(48*TS,2*TS,cw,2*TS,'#b8353a');R(57*TS-cw,2*TS,cw,2*TS,'#b8353a');for(let i=0;i<cw;i+=6){R(48*TS+i,2*TS,2,2*TS,'#8e2b3a');R(57*TS-cw+i,2*TS,2,2*TS,'#8e2b3a');}}
   const L=[];
-  ents.forEach((e,i)=>{const [x,y]=pos(e);if(x<camX-40||x>camX+VW+40||y<camY-60||y>camY+VH+40)return;L.push({y:e.ride?e.ride.y*TS:y,f:()=>{let off=e.mv?-Math.abs(Math.sin(e.walkT*14))*2:0,sx=0;if(e.jump>0)off-=Math.sin((.5-e.jump)/.5*Math.PI)*8;
+  if(W.id==='mesto'){const [cx,cy]=carXY();L.push({y:cy,f:drawFamCar});}
+  ents.forEach((e,i)=>{if(e.inCar)return;const [x,y]=pos(e);if(x<camX-40||x>camX+VW+40||y<camY-60||y>camY+VH+40)return;L.push({y:e.ride?e.ride.y*TS:y,f:()=>{let off=e.mv?-Math.abs(Math.sin(e.walkT*14))*2:0,sx=0;if(e.jump>0)off-=Math.sin((.5-e.jump)/.5*Math.PI)*8;
     if(e.swinging){sx=Math.sin(tt*4)*7;off-=4;ctx.strokeStyle='#5a3825';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+8,y+5);ctx.lineTo(x+8+sx,y+24);ctx.moveTo(x+24,y+5);ctx.lineTo(x+24+sx,y+24);ctx.stroke();R(x+5+sx,y+23,22,3,'#e8475f');}
     drawChar(x,y,e.m.r,e.m.look,e.face,off,sx,i===act,e.carry,null,e.mv&&e.mv.fast?'':tl(e.x,e.y),e.toy,e.ride);}});});
   remote.forEach(r=>{if(r.w!==W.id)return;r.m.forEach((m,j)=>L.push({y:m.py,f:()=>drawChar(m.px,m.py,m.r,m.look,m.f,0,0,false,null,j===0?r.fam:null,tl(m.x,m.y),null)}));});
@@ -865,9 +929,10 @@ function draw(){
   anims.forEach(a=>L.push({y:a.y,f:()=>{ctx.font=(a.e==='🐘'||a.e==='🦒'||a.e==='🐳'?'26px ':'20px ')+EMO;ctx.textAlign='center';ctx.textBaseline='bottom';ctx.save();if(a.vx>0){ctx.translate(a.x+16,0);ctx.scale(-1,1);ctx.fillText(a.e,0,a.y+30);}else ctx.fillText(a.e,a.x+16,a.y+30);ctx.restore();ctx.textAlign='left';}}));
   if(W.cars)cars.forEach(c=>{const r=carRect(c);if(r.x>camX-40&&r.x<camX+VW+40&&r.y>camY-40&&r.y<camY+VH+40)L.push({y:r.y+r.h-28,f:()=>drawCar(c)});});
   L.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
-  parts.forEach(p=>{if(p.d>0)return;ctx.globalAlpha=Math.max(0,p.t/p.max);if(p.k==='heart')heart(p.x-4,p.y,'#ff5d8f');else if(p.k==='star'){ctx.fillStyle='#f6c945';ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill();}else if(p.k==='note'){ctx.fillStyle='#7a5cd6';ctx.font='900 12px Nunito, sans-serif';ctx.fillText('♪',p.x,p.y);}else{ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill();}ctx.globalAlpha=1;});
+  parts.forEach(p=>{if(p.d>0)return;ctx.globalAlpha=Math.max(0,p.t/p.max);if(p.k==='heart')heart(p.x-4,p.y,'#ff5d8f');else if(p.k==='star'){ctx.fillStyle='#f6c945';ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill();}else if(p.k==='note'){ctx.fillStyle='#7a5cd6';ctx.font='900 12px Nunito, sans-serif';ctx.fillText('♪',p.x,p.y);}else if(p.k==='z'){ctx.fillStyle='#3a8fd9';ctx.font='900 10px Nunito, sans-serif';ctx.fillText('z',p.x,p.y);}else{ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill();}ctx.globalAlpha=1;});
   ents.forEach(e=>{if(e.say&&e.say.d<=0){const [x,y]=pos(e);if(x>camX-40&&x<camX+VW+40&&y>camY-40&&y<camY+VH+60)bubble(x+16,y-24,e.say.text);}});
   if(show)show.actors.forEach(a=>{if(a.say)bubble(a.x*TS+16,a.y*TS-24,a.say.text);});
+  if(driving&&driving.say){const [x,y]=carXY();bubble(x+16,y-6,driving.say.text);}
   anims.forEach(a=>{if(a.say&&a.say.d<=0)bubble(a.x+16,a.y-8,a.say.text);});
   remote.forEach(r=>{if(r.w!==W.id)return;r.m.forEach(m=>{if(m.say)bubble(m.px+16,m.py-24,m.say);});});
   ducks.forEach(d=>{if(d.say&&d.say.d<=0)bubble(d.x,d.y-8,d.say.text);});
@@ -877,7 +942,7 @@ function draw(){
     ctx.fillStyle='#fff';ctx.font='900 18px Nunito, sans-serif';ctx.textAlign='center';ctx.fillText('Z z z ...',160,150);ctx.textAlign='left';ctx.globalAlpha=1;}
   if(travel){const a=travel.t<travel.len*.25?travel.t/(travel.len*.25):Math.max(0,(travel.len-travel.t)/(travel.len*.25));ctx.fillStyle=`rgba(255,255,255,${Math.min(1,a)})`;ctx.fillRect(0,0,VW,VH);}
   const b=bldAt(ents[act].x,ents[act].y);const WN={mesto:'Městečko',zoo:'Zoo',more:'U moře',les:'V lese'};const where=b?b.name.charAt(0)+b.name.slice(1).toLowerCase():WN[W.id];
-  ctx.font='800 10px Nunito, sans-serif';const nm=ents[act].m.name+' · '+where+(show?' · '+(show.kind==='divadlo'?'🎭 '+show.title:'🎵 koncert'):'');const w=ctx.measureText(nm).width+12;ctx.fillStyle='rgba(40,48,65,.8)';rr(4,4,w,16,6);ctx.fill();ctx.fillStyle='#fff';ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(nm,10,12.5);
+  ctx.font='800 10px Nunito, sans-serif';const nm=(driving?'🚗 Řídíš auto':ents[act].m.name)+' · '+where+(show?' · '+(show.kind==='divadlo'?'🎭 '+show.title:'🎵 koncert'):'');const w=ctx.measureText(nm).width+12;ctx.fillStyle='rgba(40,48,65,.8)';rr(4,4,w,16,6);ctx.fill();ctx.fillStyle='#fff';ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(nm,10,12.5);
 }
 let pTimer=0;
 function loop(ts){if(!running)return;const dt=Math.min(.05,last?(ts-last)/1000:0);last=ts;tt+=dt;step(dt);draw();pTimer-=dt;if(pTimer<=0){pTimer=.2;sendPresence();}requestAnimationFrame(loop);}
@@ -893,7 +958,7 @@ const BAD=new RegExp('[\\u0000-\\u001f\\u007f-\\u009f\\u200b-\\u200f\\u2028-\\u2
 const clip=(s,n)=>String(s==null?'':s).replace(BAD,'').slice(0,n);
 let lastSent='';
 function sendPresence(){if(!room)return;
-  const p={fam:clip(FAM.name,20),w:W.id,m:fam().slice(0,8).map(e=>[e.m.r,clip(e.m.name,12),e.x,e.y,e.face[0],e.say&&e.say.d<=0?clip(e.say.text,60):'',packL(e.m.look)])};
+  const p={fam:clip(FAM.name,20),w:W.id,m:fam().slice(0,8).map(e=>[e.m.r,clip(e.m.name,12),driving?driving.x:e.x,driving?driving.y:e.y,e.face[0],e.say&&e.say.d<=0?clip(e.say.text,60):'',packL(e.m.look)])};
   const s=JSON.stringify(p);if(s===lastSent)return;lastSent=s;room.presence({v:p}).catch(()=>{});}
 function readPeers(peers){
   const seen=new Set();
@@ -947,14 +1012,15 @@ $('ov').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
   if(d.ice){const s=ICE[+d.ice];if(s[2]>FAM.money)return;FAM.money-=s[2];save();updPill();closeOv();en.toy=s[0];en.toyT=12;en.flower=false;say(en,'Mňam, zmrzlina!');addP(...headOf(en),'heart',2);return;}
   if(d.flw){const s=FLW[+d.flw];if(s[2]>FAM.money)return;FAM.money-=s[2];save();updPill();closeOv();en.toy=s[0];en.toyT=90;en.flower=true;say(en,'Komu ji dám?');return;}
   if(d.menu){const s=MENU[+d.menu];if(s[2]>FAM.money||!pizzaAt)return;FAM.money-=s[2];save();updPill();closeOv();startFeast({i:s[0],n:s[1]},W.PIZZA_SEATS,pizzaAt.x,pizzaAt.y);return;}
+  if(d.drive)return startDrive();
   if(d.trip)return startTravel(d.trip);
   if(d.show){if(FAM.tickets.divadlo>0)FAM.tickets.divadlo--;else{if(FAM.money<10)return;FAM.money-=10;}save();updPill();closeOv();startShow('divadlo',SHOWS[+d.show]);return;}
   if(d.conc){if(FAM.tickets.koncert>0)FAM.tickets.koncert--;else{if(FAM.money<8)return;FAM.money-=8;}save();updPill();closeOv();startShow('koncert',d.conc==='1'?'Rocková kapela':'Pohádkové písničky');return;}
   if(d.buy){const s=SHOP[+d.buy];if(s[4]>FAM.money)return;FAM.money-=s[4];en.m.look[s[0]]={id:s[1],c:s[2]};imgCache.clear();save();updPill();renderWho();say(en,rnd(['Sluší mi to?','Jupí, nové!','To je krása!']));addP(...headOf(en),'heart',3);openClothes();return;}
   if(d.off){en.m.look[d.off]=null;save();renderWho();say(en,'Sundáno!');return;}
 });
-$('bA').addEventListener('click',()=>{if($('ov').hidden&&night<=0&&!travel)act1(ents[act]);});
-$('bB').addEventListener('click',()=>{const f=ents.map((e,i)=>i).filter(i=>isFam(ents[i]));setAct(f[(f.indexOf(act)+1)%f.length]);});
+$('bA').addEventListener('click',()=>{if(!$('ov').hidden||night>0||travel)return;if(driving)return exitCar();act1(ents[act]);});
+$('bB').addEventListener('click',()=>{if(driving){driving.say={text:'Tú tú! 📯',t:1.2};return;}const f=ents.map((e,i)=>i).filter(i=>isFam(ents[i]));setAct(f[(f.indexOf(act)+1)%f.length]);});
 $('who').addEventListener('click',e=>{const b=e.target.closest('[data-w]');if(b)setAct(+b.dataset.w);});
 $('edit').addEventListener('click',()=>{running=false;closeOv();$('game').hidden=true;$('setup').hidden=false;setup();});
 $('mapBtn').addEventListener('click',()=>{$('cv').scrollIntoView({block:'start',behavior:'smooth'});openMap();});
@@ -973,6 +1039,68 @@ document.addEventListener('keydown',e=>{if($('game').hidden||!$('phone').hidden|
 document.addEventListener('keyup',e=>{const d=KEYS[e.key];if(d){ks=ks.filter(k=>k!==d);held=ks[ks.length-1]||null;}});
 window.addEventListener('blur',()=>{ks=[];held=null;});
 setup();
+
+/* ---------- škola, hudba, práce ---------- */
+FAM.grades=FAM.grades||[];FAM.music=FAM.music||0;FAM.work=FAM.work||{};
+const WORDS=[['🐶','PES'],['🐱','KOČKA'],['🏠','DŮM'],['🍎','JABLKO'],['🚗','AUTO'],['☀️','SLUNCE'],['🌳','STROM'],['🐟','RYBA'],['⚽','MÍČ'],['🌹','RŮŽE'],['🐭','MYŠ'],['🥛','MLÉKO'],['🦁','LEV'],['🍌','BANÁN'],['🐴','KŮŇ'],['🌙','MĚSÍC'],['⭐','HVĚZDA'],['🎈','BALÓNEK']];
+const NATURE=[['Které zvíře dělá „bú“?','kráva',['pes','kočka']],['Kolik nohou má pavouk?','8',['4','6']],['Kde žije ryba?','ve vodě',['na stromě','v norce']],['Které roční období je nejteplejší?','léto',['zima','podzim']],['Z čeho je sněhulák?','ze sněhu',['z písku','z hlíny']],['Kolik dní má týden?','7',['5','10']],['Jakou barvu má tráva?','zelenou',['modrou','červenou']],['Co dělají včely?','med',['mléko','vajíčka']],['Které zvíře má chobot?','slon',['žirafa','lev']],['Co potřebuje kytička, aby rostla?','vodu a slunce',['čokoládu','tmu']],['Které zvíře umí létat?','pták',['ryba','had']],['Kdy svítí měsíc?','v noci',['v poledne','ráno']]];
+const SUBJ={mat:'Matematika',cj:'Čeština',pri:'Příroda'};
+let LES=null,WK=null,SIM=null;
+function openSchool(){LES=null;overlay(`<p>Škola</p><p style="font-size:15px">Vyber si předmět. Každá hodina má 5 otázek.</p><div class="og"><button type="button" data-subj="mat"><b>🔢</b>Matematika</button><button type="button" data-subj="cj"><b>🔤</b>Čeština</button><button type="button" data-subj="pri"><b>🌿</b>Příroda</button></div>${X('Zpět')}`);}
+function mkQ(sub){if(sub==='mat'){const plus=Math.random()<.6;let a=1+Math.floor(Math.random()*10),b=1+Math.floor(Math.random()*10);if(!plus&&b>a)[a,b]=[b,a];const r=plus?a+b:a-b;const o=new Set([r]);while(o.size<3)o.add(Math.max(0,r+Math.floor(Math.random()*7)-3));return {q:`${a} ${plus?'+':'−'} ${b} = ?`,ans:String(r),opts:[...o].map(String)};}
+  if(sub==='cj'){const w=rnd(WORDS);const o=new Set([w[1]]);while(o.size<3)o.add(rnd(WORDS)[1]);return {big:w[0],q:'Co je na obrázku?',ans:w[1],opts:[...o]};}
+  const n=rnd(NATURE);return {q:n[0],ans:n[1],opts:[n[1],...n[2]]};}
+function startLesson(sub){LES={sub,n:0,ok:0,cur:mkQ(sub),msg:''};renderLesson();}
+function renderLesson(){const L=LES;
+  if(L.n>=5){const g=L.ok>=5?1:L.ok===4?2:L.ok===3?3:L.ok===2?4:5;const GN=['','jednička','dvojka','trojka','čtyřka','pětka'];FAM.grades.push({s:SUBJ[L.sub],g,d:FAM.day});if(FAM.grades.length>40)FAM.grades.shift();if(g<=2){FAM.money+=3;updPill();}save();
+    say(ents[act],g<=2?`Mám ${GN[g]}! 🎉`:'Příště to bude lepší!');
+    overlay(`<p>${SUBJ[L.sub]}: správně ${L.ok} z 5</p><div class="grade">${g}</div><p style="font-size:16px">${g<=2?'Výborně, '+GN[g]+'! Za pěknou známku dostáváš 3 Kč.':'Nevadí, zkus to znovu!'}</p><div class="row"><button class="x" type="button" data-subjmenu="1">Další předmět</button>${X('Konec vyučování')}</div>`);return;}
+  const q=L.cur;const opts=q.opts.slice().sort(()=>Math.random()-.5);
+  overlay(`<p>${SUBJ[L.sub]} · otázka ${L.n+1} z 5</p>${q.big?`<div style="font-size:64px;line-height:1.1">${q.big}</div>`:''}<p>${q.q}</p><div class="og">${opts.map(o=>`<button type="button" data-lans="${esc(o)}"><b style="font-size:20px">${esc(o)}</b></button>`).join('')}</div><p style="font-size:15px">${L.msg}</p>${X('Utéct ze školy')}`);}
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
+function tone(f,type,dur,vol){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.3,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.05);}
+function noise(dur,hp,vol){const a=ac();if(!a)return;const b=a.createBuffer(1,Math.floor(a.sampleRate*dur),a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='highpass';f.frequency.value=hp;const g=a.createGain();g.gain.value=vol||.4;s.connect(f);f.connect(g);g.connect(a.destination);s.start();}
+function kick(){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+.3);g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+.35);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.4);}
+const NOTES=[['C',261.63],['D',293.66],['E',329.63],['F',349.23],['G',392],['A',440],['H',493.88],['C²',523.25]];
+const KEYC=['#e8475f','#f28c38','#f6c945','#4cb36b','#2fb5a6','#3a8fd9','#7a5cd6','#ef7fb6'];
+const INSN={piano:'Klavír',drums:'Bubny',guitar:'Kytara',xylo:'Xylofon',violin:'Housle'};
+function openInstr(k){const e=ents[act];e.toy={piano:'🎹',drums:'🥁',guitar:'🎸',xylo:'🎵',violin:'🎻'}[k];e.toyT=30;e.flower=false;let body='';
+  if(k==='piano')body=`<div class="piano">${NOTES.map((n,i)=>`<button type="button" data-note="${i}" data-ins="piano">${n[0]}</button>`).join('')}</div>`;
+  if(k==='xylo')body=`<div class="xylo">${NOTES.map((n,i)=>`<button type="button" data-note="${i}" data-ins="xylo" style="background:${KEYC[i]};height:${150-i*10}px">${n[0]}</button>`).join('')}</div>`;
+  if(k==='drums')body=`<div class="drums">${[['kick','Velký buben','#e8475f'],['snare','Malý buben','#3a8fd9'],['hat','Činel','#d9a92a'],['tom','Tom','#4cb36b']].map(d=>`<button type="button" data-drum="${d[0]}" style="background:${d[2]}">${d[1]}</button>`).join('')}</div>`;
+  if(k==='guitar')body=`<div class="strings">${[['E',82.41],['A',110],['D',146.83],['G',196],['H',246.94],['e',329.63]].map((s,i)=>`<button type="button" data-str="${s[1]}" data-ins="guitar" style="--w:${6-i*.8}px">${s[0]}</button>`).join('')}</div>`;
+  if(k==='violin')body=`<div class="strings">${[['G',196],['D',293.66],['A',440],['E',659.25]].map((s,i)=>`<button type="button" data-str="${s[1]}" data-ins="violin" style="--w:${4-i*.7}px">${s[0]}</button>`).join('')}</div>`;
+  overlay(`<p>${INSN[k]}</p><p style="font-size:14px">Ťukej a hraj. Na telefonu musí být zapnutý zvuk.</p>${body}${X('Hotovo')}`);say(e,'Hraju na '+{piano:'klavír',drums:'bubny',guitar:'kytaru',xylo:'xylofon',violin:'housle'}[k]+'!');
+  fam().forEach((o,i)=>{if(o!==e&&dist(o,e)<6)say(o,rnd(['Krásně hraješ!','Bravo!','To zní hezky!']),2+i*.4);});}
+function playIns(ins,f){if(ins==='piano'){tone(f,'triangle',1.3,.35);tone(f*2,'sine',.6,.07);}else if(ins==='xylo'){tone(f*2,'sine',.6,.45);tone(f*4,'sine',.15,.08);}else if(ins==='guitar'){tone(f,'sawtooth',1.4,.15);tone(f*2,'triangle',1.1,.12);}else if(ins==='violin'){tone(f,'sawtooth',1.3,.14);tone(f*1.005,'sawtooth',1.3,.08);}
+  const e=ents[act];addP(...headOf(e),'note',1);}
+function drum(k){if(k==='kick')kick();else if(k==='snare'){noise(.2,1200,.5);tone(190,'triangle',.12,.25);}else if(k==='hat')noise(.08,6000,.35);else tone(140,'sine',.4,.6);addP(...headOf(ents[act]),'note',1);}
+function openMusicLesson(){SIM={seq:[],step:0,round:0,listen:true,msg:''};nextSim();}
+function simHTML(){return `<p>Hudební lekce</p><p style="font-size:15px" id="simMsg">${SIM.msg}</p><div class="xylo">${NOTES.slice(0,6).map((n,i)=>`<button type="button" data-sim="${i}" style="background:${KEYC[i]};height:${130-i*8}px">${n[0]}</button>`).join('')}</div><p style="font-size:13px">Pan učitel zahraje melodii. Ty ji zahraj po něm.</p>${X('Konec lekce')}`;}
+function nextSim(){if(!SIM)return;SIM.round++;SIM.seq.push(Math.floor(Math.random()*6));SIM.step=0;SIM.listen=true;SIM.msg=`Melodie ${SIM.round} z 5: poslouchej…`;overlay(simHTML());setTimeout(playSeq,500);}
+function playSeq(){let i=0;const t=setInterval(()=>{if(!SIM||$('ov').hidden){clearInterval(t);return;}if(i>=SIM.seq.length){clearInterval(t);SIM.listen=false;const m=$('simMsg');if(m)m.textContent='Teď to zahraj ty!';return;}
+  const k=SIM.seq[i++];tone(NOTES[k][1]*2,'sine',.45,.45);const b=document.querySelectorAll('[data-sim]')[k];if(b){b.classList.add('lit');setTimeout(()=>b.classList.remove('lit'),330);}},650);}
+function simTap(k){if(!SIM||SIM.listen)return;tone(NOTES[k][1]*2,'sine',.45,.45);const m=$('simMsg');
+  if(k===SIM.seq[SIM.step]){SIM.step++;if(SIM.step===SIM.seq.length){SIM.listen=true;if(SIM.round>=5){FAM.music++;FAM.money+=3;save();updPill();SIM=null;say(ents[act],'Mám hvězdu za hudbu! ⭐');
+      overlay(`<p>Hudební lekce</p><div class="grade">⭐</div><p style="font-size:16px">Bravo! Zahrála jsi všech 5 melodií. Dostáváš hvězdu a 3 Kč.</p>${X('Hotovo')}`);return;}
+    if(m)m.textContent='Správně! 🎉';setTimeout(nextSim,900);}}
+  else{SIM.step=0;SIM.listen=true;if(m)m.textContent='Skoro! Poslouchej ještě jednou…';setTimeout(playSeq,800);}}
+function openWork(){const e=ents[act];if(ROLES[e.m.r].pet)return say(e,'Haf! Pejsci nepracují.');if(['holka','kluk','mimi'].includes(e.m.r))return say(e,'Na práci jsem ještě malá. Já chodím do školy!');
+  if(FAM.work[e.m.name]===FAM.day)return say(e,'Dneska už mám odpracováno. Zítra zase!');
+  WK={next:1,nums:[1,2,3,4,5,6,7,8].sort(()=>Math.random()-.5)};overlay(workHTML());}
+function workHTML(){return `<p>Práce v kanceláři</p><p style="font-size:15px">Seřaď dokumenty: ťukej na čísla od 1 do 8.</p><div class="og">${WK.nums.map(n=>`<button type="button" data-wk="${n}" ${n<WK.next?'disabled':''}><b>📄</b><span style="font-size:18px">${n}</span></button>`).join('')}</div>${X('Odejít z práce')}`;}
+$('ov').addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.note!=null){e.preventDefault();playIns(d.ins,NOTES[+d.note][1]);}
+  else if(d.str){e.preventDefault();playIns(d.ins,+d.str);}
+  else if(d.drum){e.preventDefault();drum(d.drum);}
+  else if(d.sim!=null){e.preventDefault();simTap(+d.sim);}});
+$('ov').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;const en=ents[act];
+  if(b.id==='ovx'){SIM=null;LES=null;WK=null;}
+  if(d.subj)return startLesson(d.subj);
+  if(d.subjmenu)return openSchool();
+  if(d.lans!=null&&LES){if(d.lans===LES.cur.ans){LES.ok++;LES.msg='Správně! 🎉';}else LES.msg=`Skoro! Správně je: ${LES.cur.ans}`;LES.n++;LES.cur=mkQ(LES.sub);return renderLesson();}
+  if(d.wk&&WK){if(+d.wk===WK.next){WK.next++;if(WK.next>8){FAM.money+=20;FAM.work[en.m.name]=FAM.day;save();updPill();WK=null;say(en,'Mám výplatu! 💰');overlay(`<p>Hotovo!</p><div class="grade">💰</div><p style="font-size:16px">Výplata 20 Kč. Zítra můžeš přijít zase.</p>${X('Super')}`);return;}overlay(workHTML());}else say(en,'Ups, to není ono.');}});
 /* ================= TELEFON ================= */
 FAM.tickets=FAM.tickets||{};FAM.photos=FAM.photos||[];FAM.wall=FAM.wall||0;
 const WALLS=['linear-gradient(160deg,#7a5cd6,#ef7fb6)','linear-gradient(160deg,#2fb5a6,#3a8fd9)','linear-gradient(160deg,#f6c945,#f28c38)','linear-gradient(160deg,#4cb36b,#1f7442)','linear-gradient(160deg,#283041,#5a7bbf)'];
@@ -980,7 +1108,7 @@ const ROZ=[['roz_pizza','🍕','Pizza',9],['roz_burger','🍔','Hamburger',9],['
 ROZ.forEach(r=>{FOOD.push([r[0],r[1],r[2],r[3],'X']);EAT.push(r[0]);});
 const TIX=[['divadlo','🎭','Divadlo',10],['koncert','🎸','Koncert',8],['zoo','🦁','Zoo',15],['more','🏖️','Dovolená u moře',30]];
 const TAXI=[['Domů',6,9],['Herna',22,12],['Pizzerie',22,23],['Divadlo',52,9],['Koncerty',52,16],['Parkoviště',50,25],['Park',7,13],['Náměstí',35,24],['Obchody',25,9]];
-const APPS=[['shop','🛒','Nákupy','#4cb36b'],['tix','🎟️','Lístky','#e8475f'],['food','🍕','Jídlo domů','#f28c38'],['msg','💬','Zprávy','#3a8fd9'],['games','🎮','Hry','#7a5cd6'],['cam','📷','Foťák','#2f3440'],['gal','🖼️','Galerie','#ef7fb6'],['taxi','🚕','Taxi','#f6c945'],['map','🗺️','Mapa','#2fb5a6'],['bank','🏦','Banka','#1f7442'],['set','⚙️','Nastavení','#6c7488']];
+const APPS=[['shop','🛒','Nákupy','#4cb36b'],['tix','🎟️','Lístky','#e8475f'],['food','🍕','Jídlo domů','#f28c38'],['msg','💬','Zprávy','#3a8fd9'],['games','🎮','Hry','#7a5cd6'],['cam','📷','Foťák','#2f3440'],['gal','🖼️','Galerie','#ef7fb6'],['taxi','🚕','Taxi','#f6c945'],['map','🗺️','Mapa','#2fb5a6'],['bank','🏦','Banka','#1f7442'],['zak','📒','Žákovská','#c98a3c'],['set','⚙️','Nastavení','#6c7488']];
 let PH={open:false,unlocked:false,app:null,pin:'',pin1:null,tab:'jidlo',who:0,chatWith:null,game:null,timer:null,forgot:false};
 const MSGS={};
 const pscr=()=>$('pscr');
@@ -1035,9 +1163,10 @@ function appHTML(){const a=PH.app;
     return gameHTML();}
   if(a==='cam')return `<div class="pcam"><div class="pview"><img id="pprev" alt="Náhled" src="${snap()||''}"></div><button class="pshutter" data-act="shoot" aria-label="Vyfotit"></button><p class="pnote">Vyfotí to, co je zrovna ve hře.</p></div>`;
   if(a==='gal')return FAM.photos.length?`<div class="pgal">${FAM.photos.map((p,i)=>`<div><img alt="Fotka ${i+1}" src="${p}"><button class="plink" data-delph="${i}">Smazat</button></div>`).join('')}</div>`:'<p class="pnote">Žádné fotky. Vyfoť něco foťákem!</p>';
-  if(a==='taxi')return W.id!=='mesto'?'<p class="pnote">Taxi jezdí jen ve městě. Domů pojedete svým autem.</p>':`<p class="pnote">Kam to bude? Jízda stojí 3 Kč a jede celá rodina.</p><div class="plist">${TAXI.map((t,i)=>`<button class="pcontact" data-taxi="${i}" ${FAM.money<3?'disabled':''}><b>🚕</b><span>${t[0]}</span></button>`).join('')}</div>`;
+  if(a==='taxi')return driving?'<p class="pnote">Teď řídíš auto. Nejdřív zaparkuj.</p>':W.id!=='mesto'?'<p class="pnote">Taxi jezdí jen ve městě. Domů pojedete svým autem.</p>':`<p class="pnote">Kam to bude? Jízda stojí 3 Kč a jede celá rodina.</p><div class="plist">${TAXI.map((t,i)=>`<button class="pcontact" data-taxi="${i}" ${FAM.money<3?'disabled':''}><b>🚕</b><span>${t[0]}</span></button>`).join('')}</div>`;
   if(a==='map'){const sc=290/W.cv.width;return `<div style="position:relative;width:${W.cv.width*sc}px;height:${W.cv.height*sc}px;margin:0 auto"><img alt="Mapa" src="${mapURL()}" style="width:100%;height:100%;border-radius:8px">${fam().map(e=>`<span style="position:absolute;left:${(e.x+.5)*TS*sc-5}px;top:${(e.y+.5)*TS*sc-5}px;width:10px;height:10px;border-radius:50%;background:${e===ents[act]?'#ff6b3d':'#fff'};border:2px solid #283041"></span>`).join('')}</div><p class="pnote">Oranžová tečka jsi ty.</p>`;}
   if(a==='bank')return `<div class="pbank"><small>Na účtu</small><div>${FAM.money} Kč</div></div><p class="pnote">Každé ráno po vyspání přibude 40 Kč. Další peníze vyděláš ve hrách v telefonu.</p><h4>Lístky</h4><p class="pnote">${TIX.filter(t=>FAM.tickets[t[0]]>0).map(t=>t[1]+' '+t[2]+' ×'+FAM.tickets[t[0]]).join(', ')||'žádné'}</p>`;
+  if(a==='zak'){const g=FAM.grades.slice().reverse();return `<div class="pbank" style="background:linear-gradient(135deg,#c98a3c,#e8a95b)"><small>Hvězdy za hudbu</small><div>${'⭐'.repeat(Math.min(FAM.music,10))||'0'}</div></div><h4>Známky ze školy</h4>${g.length?`<div class="plist">${g.slice(0,15).map(x=>`<div class="pcontact"><b>${x.g}</b><span>${x.s}<small>Den ${x.d}</small></span></div>`).join('')}</div>`:'<p class="pnote">Zatím žádné známky. Zajdi do školy!</p>'}<h4>Práce</h4><p class="pnote">${Object.keys(FAM.work).length?Object.entries(FAM.work).map(([n,d])=>esc(n)+' naposledy pracoval(a) v den '+d).join('<br>'):'Zatím nikdo nebyl v práci.'}</p>`;}
   if(a==='set')return `<h4>Tapeta</h4><div class="prow">${WALLS.map((w,i)=>`<button class="pwall ${i===FAM.wall?'on':''}" data-wall="${i}" style="background:${w}" aria-label="Tapeta ${i+1}"></button>`).join('')}</div><h4>Kód</h4><button class="pbtn" data-act="newpin">Změnit kód</button>`;
   return '';
 }
