@@ -1059,24 +1059,33 @@ function renderLesson(){const L=LES;
   overlay(`<p>${SUBJ[L.sub]} · otázka ${L.n+1} z 5</p>${q.big?`<div style="font-size:64px;line-height:1.1">${q.big}</div>`:''}<p>${q.q}</p><div class="og">${opts.map(o=>`<button type="button" data-lans="${esc(o)}"><b style="font-size:20px">${esc(o)}</b></button>`).join('')}</div><p style="font-size:15px">${L.msg}</p>${X('Utéct ze školy')}`);}
 let AC=null;
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
+let _silent=null;
+function silentWav(){const sr=8000,n=sr/2,buf=new ArrayBuffer(44+n*2),v=new DataView(buf);const w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  let b='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i++)b+=String.fromCharCode(u[i]);return 'data:audio/wav;base64,'+btoa(b);}
+function unlockAudio(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+  const a=ac();if(a){try{const b=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=b;src.connect(a.destination);src.start(0);}catch(e){}}
+  if(!_silent){try{_silent=new Audio(silentWav());_silent.loop=true;_silent.setAttribute('playsinline','');}catch(e){_silent=null;}}
+  if(_silent&&_silent.paused){_silent.play().catch(()=>{});}}
+['click','touchend','keydown'].forEach(t=>document.addEventListener(t,unlockAudio,{passive:true,capture:true}));
 function tone(f,type,dur,vol){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.3,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.05);}
 function noise(dur,hp,vol){const a=ac();if(!a)return;const b=a.createBuffer(1,Math.floor(a.sampleRate*dur),a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='highpass';f.frequency.value=hp;const g=a.createGain();g.gain.value=vol||.4;s.connect(f);f.connect(g);g.connect(a.destination);s.start();}
 function kick(){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+.3);g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+.35);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.4);}
 const NOTES=[['C',261.63],['D',293.66],['E',329.63],['F',349.23],['G',392],['A',440],['H',493.88],['C²',523.25]];
 const KEYC=['#e8475f','#f28c38','#f6c945','#4cb36b','#2fb5a6','#3a8fd9','#7a5cd6','#ef7fb6'];
 const INSN={piano:'Klavír',drums:'Bubny',guitar:'Kytara',xylo:'Xylofon',violin:'Housle'};
-function openInstr(k){const e=ents[act];e.toy={piano:'🎹',drums:'🥁',guitar:'🎸',xylo:'🎵',violin:'🎻'}[k];e.toyT=30;e.flower=false;let body='';
+function openInstr(k){unlockAudio();const e=ents[act];e.toy={piano:'🎹',drums:'🥁',guitar:'🎸',xylo:'🎵',violin:'🎻'}[k];e.toyT=30;e.flower=false;let body='';
   if(k==='piano')body=`<div class="piano">${NOTES.map((n,i)=>`<button type="button" data-note="${i}" data-ins="piano">${n[0]}</button>`).join('')}</div>`;
   if(k==='xylo')body=`<div class="xylo">${NOTES.map((n,i)=>`<button type="button" data-note="${i}" data-ins="xylo" style="background:${KEYC[i]};height:${150-i*10}px">${n[0]}</button>`).join('')}</div>`;
   if(k==='drums')body=`<div class="drums">${[['kick','Velký buben','#e8475f'],['snare','Malý buben','#3a8fd9'],['hat','Činel','#d9a92a'],['tom','Tom','#4cb36b']].map(d=>`<button type="button" data-drum="${d[0]}" style="background:${d[2]}">${d[1]}</button>`).join('')}</div>`;
   if(k==='guitar')body=`<div class="strings">${[['E',82.41],['A',110],['D',146.83],['G',196],['H',246.94],['e',329.63]].map((s,i)=>`<button type="button" data-str="${s[1]}" data-ins="guitar" style="--w:${6-i*.8}px">${s[0]}</button>`).join('')}</div>`;
   if(k==='violin')body=`<div class="strings">${[['G',196],['D',293.66],['A',440],['E',659.25]].map((s,i)=>`<button type="button" data-str="${s[1]}" data-ins="violin" style="--w:${4-i*.7}px">${s[0]}</button>`).join('')}</div>`;
-  overlay(`<p>${INSN[k]}</p><p style="font-size:14px">Ťukej a hraj. Na telefonu musí být zapnutý zvuk.</p>${body}${X('Hotovo')}`);say(e,'Hraju na '+{piano:'klavír',drums:'bubny',guitar:'kytaru',xylo:'xylofon',violin:'housle'}[k]+'!');
+  overlay(`<p>${INSN[k]}</p><p style="font-size:14px">Ťukej a hraj. Když nic neslyšíš, zesil hlasitost na telefonu.</p>${body}${X('Hotovo')}`);say(e,'Hraju na '+{piano:'klavír',drums:'bubny',guitar:'kytaru',xylo:'xylofon',violin:'housle'}[k]+'!');
   fam().forEach((o,i)=>{if(o!==e&&dist(o,e)<6)say(o,rnd(['Krásně hraješ!','Bravo!','To zní hezky!']),2+i*.4);});}
 function playIns(ins,f){if(ins==='piano'){tone(f,'triangle',1.3,.35);tone(f*2,'sine',.6,.07);}else if(ins==='xylo'){tone(f*2,'sine',.6,.45);tone(f*4,'sine',.15,.08);}else if(ins==='guitar'){tone(f,'sawtooth',1.4,.15);tone(f*2,'triangle',1.1,.12);}else if(ins==='violin'){tone(f,'sawtooth',1.3,.14);tone(f*1.005,'sawtooth',1.3,.08);}
   const e=ents[act];addP(...headOf(e),'note',1);}
 function drum(k){if(k==='kick')kick();else if(k==='snare'){noise(.2,1200,.5);tone(190,'triangle',.12,.25);}else if(k==='hat')noise(.08,6000,.35);else tone(140,'sine',.4,.6);addP(...headOf(ents[act]),'note',1);}
-function openMusicLesson(){SIM={seq:[],step:0,round:0,listen:true,msg:''};nextSim();}
+function openMusicLesson(){unlockAudio();SIM={seq:[],step:0,round:0,listen:true,msg:''};nextSim();}
 function simHTML(){return `<p>Hudební lekce</p><p style="font-size:15px" id="simMsg">${SIM.msg}</p><div class="xylo">${NOTES.slice(0,6).map((n,i)=>`<button type="button" data-sim="${i}" style="background:${KEYC[i]};height:${130-i*8}px">${n[0]}</button>`).join('')}</div><p style="font-size:13px">Pan učitel zahraje melodii. Ty ji zahraj po něm.</p>${X('Konec lekce')}`;}
 function nextSim(){if(!SIM)return;SIM.round++;SIM.seq.push(Math.floor(Math.random()*6));SIM.step=0;SIM.listen=true;SIM.msg=`Melodie ${SIM.round} z 5: poslouchej…`;overlay(simHTML());setTimeout(playSeq,500);}
 function playSeq(){let i=0;const t=setInterval(()=>{if(!SIM||$('ov').hidden){clearInterval(t);return;}if(i>=SIM.seq.length){clearInterval(t);SIM.listen=false;const m=$('simMsg');if(m)m.textContent='Teď to zahraj ty!';return;}
